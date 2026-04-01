@@ -32,10 +32,14 @@ docker compose up --build
 4. 테스트 영상 송출
 
 ```bash
-ffmpeg -re -stream_loop -1 -i sample.mp4 \
-  -c:v libx264 -preset veryfast -g 60 -keyint_min 60 \
-  -c:a aac -b:a 128k -ar 48000 \
-  -f flv rtmp://localhost:1935/live/stream
+bash scripts/push-loop-source.sh
+```
+
+기본값은 루트의 `testclip.mp4`를 무한 반복 송출하고, 화면 좌측 상단에 현재 시각을 오버레이한다.
+다른 입력 파일이나 RTMP URL을 쓰려면 환경변수로 지정하면 된다.
+
+```bash
+INPUT_FILE=/path/to/clip.mp4 RTMP_URL=rtmp://46.250.255.39:1935/live/stream bash scripts/push-loop-source.sh
 ```
 
 5. 세션 생성
