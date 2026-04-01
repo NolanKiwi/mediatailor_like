@@ -18,6 +18,7 @@ MEDIA = """#EXTM3U
 #EXT-X-VERSION:7
 #EXT-X-TARGETDURATION:4
 #EXT-X-MEDIA-SEQUENCE:6
+#EXT-X-MAP:URI="init.mp4"
 #EXTINF:4.000,
 segment_6.m4s
 #EXTINF:4.000,
@@ -66,6 +67,25 @@ def test_stitch_media_playlist(tmp_path):
     assert "#EXT-X-CUE-OUT:DURATION=8.000" in output
     assert "http://localhost:8080/ads/ad_000.ts" in output
     assert "http://localhost:8080/live/video_720p/segment_6.m4s" in output
+    assert '#EXT-X-MAP:URI="http://localhost:8080/live/video_720p/init.mp4"' in output
+
+
+def test_audio_playlist_keeps_origin_segments_without_ad_insertion(tmp_path):
+    ads_dir = tmp_path / "ads"
+    ads_dir.mkdir()
+    (ads_dir / "demo_ad.m3u8").write_text(AD, encoding="utf-8")
+
+    output = stitch_media_playlist(
+        MEDIA,
+        variant="audio/index.m3u8",
+        public_origin_base_url="http://localhost:8080",
+        ad_breaks=[{"id": "break-1", "after_segments": 6, "asset_playlist": "demo_ad.m3u8"}],
+        ads_dir=ads_dir,
+    )
+
+    assert "#EXT-X-CUE-OUT" not in output
+    assert '#EXT-X-MAP:URI="http://localhost:8080/live/audio/init.mp4"' in output
+    assert "http://localhost:8080/live/audio/segment_6.m4s" in output
 
 
 def test_demo_page_served():

@@ -80,6 +80,14 @@ def _build_ssai_variant_uri(session_id: str, variant: str) -> str:
     return f"/ssai/media.m3u8?session={quote(session_id)}&variant={quote(variant, safe='')}"
 
 
+def rewrite_tag_uri(line: str, base_url: str) -> str:
+    if 'URI="' not in line:
+        return line
+    prefix, remainder = line.split('URI="', 1)
+    original_uri, suffix = remainder.split('"', 1)
+    return f'{prefix}URI="{urljoin(base_url, original_uri)}"{suffix}'
+
+
 def rewrite_master_playlist(content: str, session_id: str) -> str:
     rewritten: list[str] = []
     for raw_line in content.splitlines():
@@ -112,16 +120,17 @@ def stitch_media_playlist(
     ads_dir: str | Path,
 ) -> str:
     playlist = parse_media_playlist(content)
-    lines = list(playlist.header_lines)
     variant_base = f"{public_origin_base_url.rstrip('/')}/live/{variant.rsplit('/', 1)[0].strip('/')}/"
     if variant.count("/") == 0:
         variant_base = f"{public_origin_base_url.rstrip('/')}/live/"
+    lines = [rewrite_tag_uri(line, variant_base) for line in playlist.header_lines]
 
     scheduled_breaks = {int(item["after_segments"]): item for item in ad_breaks}
+    is_audio_variant = variant.startswith("audio/")
 
     for offset, segment in enumerate(playlist.segments):
         absolute_index = playlist.media_sequence + offset
-        if absolute_index in scheduled_breaks:
+        if not is_audio_variant and absolute_index in scheduled_breaks:
             ad_break = scheduled_breaks[absolute_index]
             ad_segments = load_ad_segments(
                 ads_dir=ads_dir,
@@ -143,5 +152,5 @@ def stitch_media_playlist(
         lines.append(f"#EXTINF:{segment.duration:.3f},{segment.title}")
         lines.append(urljoin(variant_base, segment.uri))
 
-    lines.extend(playlist.footer_lines)
+    lines.extend(rewrite_tag_uri(line, variant_base) for line in playlist.footer_lines)
     return "\n".join(lines) + "\n"
