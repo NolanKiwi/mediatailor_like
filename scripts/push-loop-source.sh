@@ -26,10 +26,10 @@ echo "[$(date -Is)] starting RTMP loop push"
 echo "[$(date -Is)] input=${INPUT_FILE}"
 echo "[$(date -Is)] target=${RTMP_URL}"
 
-drawtext_filter="drawtext=text='%{localtime\\\\:%Y-%m-%d %H\\\\:%M\\\\:%S}':x=24:y=18:fontsize=42:fontcolor=black:box=1:boxcolor=white@0.92:boxborderw=16"
+drawtext_filter="drawtext=text='%{localtime}':x=24:y=18:fontsize=42:fontcolor=black:box=1:boxcolor=white@0.92:boxborderw=16"
 
 if [[ -f "${FONT_FILE}" ]]; then
-  drawtext_filter="drawtext=fontfile=${FONT_FILE}:text='%{localtime\\\\:%Y-%m-%d %H\\\\:%M\\\\:%S}':x=24:y=18:fontsize=42:fontcolor=black:box=1:boxcolor=white@0.92:boxborderw=16"
+  drawtext_filter="drawtext=fontfile=${FONT_FILE}:text='%{localtime}':x=24:y=18:fontsize=42:fontcolor=black:box=1:boxcolor=white@0.92:boxborderw=16"
 fi
 
 exec ffmpeg \
