@@ -1,0 +1,53 @@
+services:
+  ingest:
+    image: alfg/nginx-rtmp:latest
+    container_name: mediatailor-ingest
+    ports:
+      - "1935:1935"
+      - "8080:8080"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf.template:ro
+      - ./volumes/origin:/var/www/origin
+    restart: unless-stopped
+
+  transcoder:
+    image: jrottenberg/ffmpeg:6.1-ubuntu
+    container_name: mediatailor-transcoder
+    depends_on:
+      - ingest
+    entrypoint: ["/bin/bash", "/opt/mediatailor/scripts/transcode-to-udp.sh"]
+    volumes:
+      - ./scripts:/opt/mediatailor/scripts:ro
+    restart: unless-stopped
+
+  packager:
+    image: google/shaka-packager:latest
+    container_name: mediatailor-packager
+    depends_on:
+      - ingest
+      - transcoder
+    volumes:
+      - ./scripts:/opt/mediatailor/scripts:ro
+      - ./volumes/origin:/var/www/origin
+    command: ["/bin/sh", "/opt/mediatailor/scripts/run-packager.sh"]
+    restart: unless-stopped
+
+  ssai:
+    build:
+      context: .
+      dockerfile: Dockerfile.ssai
+    container_name: mediatailor-ssai
+    depends_on:
+      - ingest
+    environment:
+      ORIGIN_BASE_URL: http://ingest:8080/live
+      PUBLIC_ORIGIN_BASE_URL: http://localhost:8080
+      ADS_DIR: /srv/origin/ads
+      BREAK_CONFIG: /app/config/ad_breaks.yaml
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app:ro
+      - ./config:/app/config:ro
+      - ./volumes/origin:/srv/origin:ro
+    restart: unless-stopped

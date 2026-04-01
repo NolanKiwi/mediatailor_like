@@ -1,0 +1,7 @@
+__pycache__/
+.pytest_cache/
+volumes/origin/live/
+volumes/origin/ads/*.ts
+volumes/origin/ads/*.m3u8
+*.pyc
+

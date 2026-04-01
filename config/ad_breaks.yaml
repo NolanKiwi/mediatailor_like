@@ -1,0 +1,8 @@
+breaks:
+  - id: midroll-1
+    after_segments: 6
+    asset_playlist: demo_ad.m3u8
+  - id: midroll-2
+    after_segments: 12
+    asset_playlist: demo_ad.m3u8
+
