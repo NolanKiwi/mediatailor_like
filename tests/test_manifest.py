@@ -7,8 +7,10 @@ from app.manifest import parse_media_playlist, rewrite_master_playlist, stitch_m
 
 MASTER = """#EXTM3U
 #EXT-X-VERSION:7
+#EXT-X-MEDIA:TYPE=AUDIO,URI="audio/index.m3u8",GROUP-ID="audio",NAME="ENGLISH"
 #EXT-X-STREAM-INF:BANDWIDTH=2800000,RESOLUTION=1280x720
 video_720p/index.m3u8
+#EXT-X-I-FRAME-STREAM-INF:BANDWIDTH=120000,RESOLUTION=1280x720,URI="video_720p/iframes.m3u8"
 """
 
 
@@ -44,6 +46,8 @@ def test_parse_media_playlist():
 def test_rewrite_master_playlist():
     output = rewrite_master_playlist(MASTER, "abc123")
     assert "/ssai/media.m3u8?session=abc123&variant=video_720p%2Findex.m3u8" in output
+    assert 'URI="/ssai/media.m3u8?session=abc123&variant=audio%2Findex.m3u8"' in output
+    assert 'URI="/ssai/media.m3u8?session=abc123&variant=video_720p%2Fiframes.m3u8"' in output
 
 
 def test_stitch_media_playlist(tmp_path):

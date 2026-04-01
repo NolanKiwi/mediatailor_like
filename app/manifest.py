@@ -76,16 +76,30 @@ def load_ad_segments(ads_dir: str | Path, asset_playlist: str, public_base_url: 
     ]
 
 
+def _build_ssai_variant_uri(session_id: str, variant: str) -> str:
+    return f"/ssai/media.m3u8?session={quote(session_id)}&variant={quote(variant, safe='')}"
+
+
 def rewrite_master_playlist(content: str, session_id: str) -> str:
     rewritten: list[str] = []
     for raw_line in content.splitlines():
         line = raw_line.strip()
         if not line:
             continue
+        if line.startswith("#EXT-X-MEDIA:") and 'URI="' in line:
+            prefix, remainder = line.split('URI="', 1)
+            original_uri, suffix = remainder.split('"', 1)
+            rewritten.append(f'{prefix}URI="{_build_ssai_variant_uri(session_id, original_uri)}"{suffix}')
+            continue
+        if line.startswith("#EXT-X-I-FRAME-STREAM-INF:") and 'URI="' in line:
+            prefix, remainder = line.split('URI="', 1)
+            original_uri, suffix = remainder.split('"', 1)
+            rewritten.append(f'{prefix}URI="{_build_ssai_variant_uri(session_id, original_uri)}"{suffix}')
+            continue
         if line.startswith("#"):
             rewritten.append(line)
             continue
-        rewritten.append(f"/ssai/media.m3u8?session={quote(session_id)}&variant={quote(line, safe='')}")
+        rewritten.append(_build_ssai_variant_uri(session_id, line))
     return "\n".join(rewritten) + "\n"
 
 
@@ -131,4 +145,3 @@ def stitch_media_playlist(
 
     lines.extend(playlist.footer_lines)
     return "\n".join(lines) + "\n"
-
