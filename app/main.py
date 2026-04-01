@@ -7,7 +7,8 @@ from pathlib import Path
 import httpx
 import yaml
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
 
 from .manifest import rewrite_master_playlist, stitch_media_playlist
 
@@ -17,6 +18,9 @@ ORIGIN_BASE_URL = os.getenv("ORIGIN_BASE_URL", "http://localhost:8080/live").rst
 PUBLIC_ORIGIN_BASE_URL = os.getenv("PUBLIC_ORIGIN_BASE_URL", "http://localhost:8080").rstrip("/")
 BREAK_CONFIG = Path(os.getenv("BREAK_CONFIG", "/app/config/ad_breaks.yaml"))
 ADS_DIR = Path(os.getenv("ADS_DIR", "/srv/origin/ads"))
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 def load_breaks() -> list[dict]:
@@ -24,6 +28,16 @@ def load_breaks() -> list[dict]:
         return []
     data = yaml.safe_load(BREAK_CONFIG.read_text(encoding="utf-8")) or {}
     return data.get("breaks", [])
+
+
+@app.get("/")
+async def demo_home() -> HTMLResponse:
+    return HTMLResponse((STATIC_DIR / "index.html").read_text(encoding="utf-8"))
+
+
+@app.get("/demo")
+async def demo_page() -> HTMLResponse:
+    return HTMLResponse((STATIC_DIR / "index.html").read_text(encoding="utf-8"))
 
 
 @app.get("/healthz")
@@ -78,4 +92,3 @@ async def ssai_media(
         ads_dir=ADS_DIR,
     )
     return PlainTextResponse(stitched, media_type="application/vnd.apple.mpegurl")
-

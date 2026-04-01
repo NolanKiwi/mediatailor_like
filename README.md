@@ -46,9 +46,42 @@ curl http://localhost:8000/session
 
 응답의 `master_url`을 플레이어에 넣으면 SSAI가 적용된 HLS master manifest를 받을 수 있다.
 
+6. 데모 플레이어 열기
+
+브라우저에서 `http://localhost:8000/demo`를 열면 stitched manifest 기반 HLS 재생과 광고 구간 타임라인을 함께 볼 수 있다.
+페이지는 다음을 한 화면에서 보여준다.
+
+- SSAI 세션 생성
+- HLS master/media manifest 분석
+- 광고 break와 cue 태그 시각화
+- 실제 stitched stream 재생
+
+## External Access
+
+외부 브라우저에서 접속할 때는 stitched media playlist 안의 origin URL이 `localhost`가 아니어야 한다.
+이 프로젝트는 `docker-compose.yml`의 `PUBLIC_ORIGIN_BASE_URL` 값을 사용한다.
+
+예시:
+
+```bash
+export PUBLIC_ORIGIN_BASE_URL=http://46.250.255.39:8080
+docker compose up -d --build ssai
+```
+
+그 다음 외부에서 아래 주소로 접속하면 된다.
+
+- 플레이어: `http://46.250.255.39:8000/demo`
+- 세션 API: `http://46.250.255.39:8000/session`
+- origin HLS: `http://46.250.255.39:8080/live/master.m3u8`
+
+주의:
+
+- 서버 보안그룹이나 방화벽에서 `8000/tcp`, `8080/tcp`를 열어야 한다.
+- `PUBLIC_ORIGIN_BASE_URL`만 바뀐 경우 `ssai` 컨테이너만 재생성하면 된다.
+- `ingest`는 이미 `0.0.0.0:8080`으로 publish 되어 있으므로 보통 재시작이 필요 없다.
+
 ## Notes
 
 - 기본 광고 삽입 위치는 `config/ad_breaks.yaml`에서 segment index 기준으로 제어한다.
 - origin segment URL은 기본적으로 `http://localhost:8080`을 사용한다.
 - CDN을 붙일 때는 `PUBLIC_ORIGIN_BASE_URL`을 CDN 도메인으로 바꿔야 한다.
-

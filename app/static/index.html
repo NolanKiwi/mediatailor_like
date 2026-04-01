@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediaTailor SSAI Demo Player</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">SERVER-SIDE AD INSERTION DEMO</p>
+        <h1>MediaTailor 같은 SSAI 흐름을 플레이어에서 그대로 보여줍니다.</h1>
+        <p class="lede">
+          세션을 만들고 stitched HLS master manifest를 불러온 뒤, 광고 cue 태그가 실제 재생 타임라인에 어떻게
+          반영되는지 바로 확인할 수 있습니다.
+        </p>
+        <div class="hero-actions">
+          <button id="create-session-btn" class="primary-button" type="button">새 세션 생성</button>
+          <button id="reload-manifest-btn" class="ghost-button" type="button">Manifest 다시 분석</button>
+        </div>
+      </div>
+      <div class="hero-panel">
+        <div class="metric-card">
+          <span class="metric-label">Session</span>
+          <strong id="session-id">없음</strong>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Playback State</span>
+          <strong id="playback-state">대기 중</strong>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Current Phase</span>
+          <strong id="current-phase">분석 전</strong>
+        </div>
+      </div>
+    </section>
+
+    <main class="dashboard">
+      <section class="player-card glass">
+        <div class="section-header">
+          <div>
+            <p class="section-label">PLAYER</p>
+            <h2>Stitched HLS Playback</h2>
+          </div>
+          <div class="status-pill" id="support-pill">HLS 지원 확인 중</div>
+        </div>
+        <div class="video-frame">
+          <video id="player" controls playsinline preload="auto"></video>
+        </div>
+        <div class="playback-meta">
+          <div class="playback-row">
+            <span>Master URL</span>
+            <code id="master-url">생성 전</code>
+          </div>
+          <div class="playback-row">
+            <span>Selected Variant</span>
+            <code id="variant-url">분석 전</code>
+          </div>
+          <div class="playback-row">
+            <span>Current Segment</span>
+            <code id="current-segment">-</code>
+          </div>
+        </div>
+      </section>
+
+      <section class="analysis-card glass">
+        <div class="section-header">
+          <div>
+            <p class="section-label">TIMELINE</p>
+            <h2>광고 삽입 구간 시각화</h2>
+          </div>
+          <div class="timeline-legend">
+            <span><i class="legend-box content"></i>콘텐츠</span>
+            <span><i class="legend-box ad"></i>광고</span>
+            <span><i class="legend-box active"></i>현재 위치</span>
+          </div>
+        </div>
+        <div id="timeline" class="timeline"></div>
+        <div id="ad-breaks" class="break-grid"></div>
+      </section>
+
+      <section class="manifest-card glass">
+        <div class="section-header">
+          <div>
+            <p class="section-label">MANIFEST INSPECTOR</p>
+            <h2>Master / Media Playlist 분석</h2>
+          </div>
+        </div>
+        <div class="info-grid">
+          <article>
+            <h3>Variants</h3>
+            <ul id="variants-list" class="stack-list"></ul>
+          </article>
+          <article>
+            <h3>Ad Break Schedule</h3>
+            <ul id="breaks-list" class="stack-list"></ul>
+          </article>
+          <article>
+            <h3>Playback Events</h3>
+            <ul id="event-log" class="stack-list event-log"></ul>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.20/dist/hls.min.js"></script>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

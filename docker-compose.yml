@@ -41,7 +41,7 @@ services:
       - ingest
     environment:
       ORIGIN_BASE_URL: http://ingest:8080/live
-      PUBLIC_ORIGIN_BASE_URL: http://localhost:8080
+      PUBLIC_ORIGIN_BASE_URL: ${PUBLIC_ORIGIN_BASE_URL:-http://46.250.255.39:8080}
       ADS_DIR: /srv/origin/ads
       BREAK_CONFIG: /app/config/ad_breaks.yaml
     ports:

@@ -1,3 +1,7 @@
+import asyncio
+import json
+
+from app.main import create_session, demo_page
 from app.manifest import parse_media_playlist, rewrite_master_playlist, stitch_media_playlist
 
 
@@ -59,3 +63,18 @@ def test_stitch_media_playlist(tmp_path):
     assert "http://localhost:8080/ads/ad_000.ts" in output
     assert "http://localhost:8080/live/video_720p/segment_6.m4s" in output
 
+
+def test_demo_page_served():
+    response = asyncio.run(demo_page())
+
+    assert response.status_code == 200
+    assert "MediaTailor SSAI Demo Player" in response.body.decode("utf-8")
+
+
+def test_session_response_contains_master_url():
+    response = asyncio.run(create_session())
+    payload = json.loads(response.body.decode("utf-8"))
+
+    assert response.status_code == 200
+    assert payload["master_url"].startswith("/ssai/master.m3u8?session=")
+    assert isinstance(payload["breaks"], list)
