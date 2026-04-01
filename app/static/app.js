@@ -36,6 +36,16 @@ function appendEvent(message) {
   }
 }
 
+async function attemptAutoplay(source) {
+  try {
+    await elements.player.play();
+    appendEvent(`Autoplay started via ${source}`);
+  } catch (error) {
+    appendEvent(`Autoplay blocked via ${source}: ${error.message}`);
+    elements.playbackState.textContent = "Ready, waiting for manual play";
+  }
+}
+
 function setSupportStatus() {
   if (window.Hls && window.Hls.isSupported()) {
     elements.supportPill.textContent = "Playback via hls.js";
@@ -310,6 +320,10 @@ function destroyPlayer() {
 
 function attachPlayerEvents() {
   elements.player.addEventListener("play", () => {
+    if (state.hls) {
+      state.hls.startLoad(-1);
+      appendEvent("hls.js startLoad triggered from play event");
+    }
     elements.playbackState.textContent = "Playing";
   });
   elements.player.addEventListener("pause", () => {
@@ -338,9 +352,27 @@ function loadPlayback(url) {
     });
     hls.loadSource(url);
     hls.attachMedia(elements.player);
+    hls.on(window.Hls.Events.MEDIA_ATTACHED, () => {
+      appendEvent("hls.js media attached");
+    });
+    hls.on(window.Hls.Events.LEVEL_LOADING, (_, data) => {
+      appendEvent(`Level loading: ${data.url}`);
+    });
+    hls.on(window.Hls.Events.LEVEL_LOADED, (_, data) => {
+      appendEvent(`Level loaded: ${data.details.fragments.length} fragments`);
+    });
+    hls.on(window.Hls.Events.FRAG_LOADING, (_, data) => {
+      appendEvent(`Fragment loading: ${data.frag.url}`);
+    });
+    hls.on(window.Hls.Events.FRAG_LOADED, (_, data) => {
+      appendEvent(`Fragment loaded: ${data.frag.url}`);
+    });
     hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
       appendEvent("hls.js manifest parsed");
       elements.playbackState.textContent = "Ready";
+      hls.startLoad(-1);
+      appendEvent("hls.js startLoad triggered after manifest parse");
+      void attemptAutoplay("hls.js");
     });
     hls.on(window.Hls.Events.LEVEL_SWITCHED, (_, data) => {
       appendEvent(`ABR level switched: ${data.level}`);
@@ -355,6 +387,7 @@ function loadPlayback(url) {
   if (elements.player.canPlayType("application/vnd.apple.mpegurl")) {
     elements.player.src = url;
     elements.playbackState.textContent = "Ready";
+    void attemptAutoplay("native-hls");
     return;
   }
 
