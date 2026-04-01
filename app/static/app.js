@@ -349,6 +349,7 @@ function loadPlayback(url) {
     const hls = new window.Hls({
       enableWorker: true,
       lowLatencyMode: false,
+      capLevelToPlayerSize: true,
     });
     hls.loadSource(url);
     hls.attachMedia(elements.player);
@@ -369,6 +370,14 @@ function loadPlayback(url) {
     });
     hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
       appendEvent("hls.js manifest parsed");
+      if (hls.levels.length > 0) {
+        const lowestLevel = hls.levels.length - 1;
+        hls.currentLevel = lowestLevel;
+        hls.nextLevel = lowestLevel;
+        hls.loadLevel = lowestLevel;
+        hls.autoLevelCapping = lowestLevel;
+        appendEvent(`Playback level pinned to ${hls.levels[lowestLevel].height}p for stability`);
+      }
       elements.playbackState.textContent = "Ready";
       hls.startLoad(-1);
       appendEvent("hls.js startLoad triggered after manifest parse");
