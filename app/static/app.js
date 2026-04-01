@@ -65,7 +65,19 @@ async function createSession() {
 }
 
 async function fetchText(url) {
-  const response = await fetch(url);
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 6000);
+  let response;
+  try {
+    response = await fetch(url, { signal: controller.signal });
+  } catch (error) {
+    window.clearTimeout(timeoutId);
+    if (error.name === "AbortError") {
+      throw new Error(`request timed out: ${url}`);
+    }
+    throw error;
+  }
+  window.clearTimeout(timeoutId);
   if (!response.ok) {
     throw new Error(`manifest fetch failed: ${response.status} ${url}`);
   }
@@ -277,6 +289,7 @@ async function inspectSession() {
   state.variantUrl = preferredVariant.url;
   elements.variantUrl.textContent = state.variantUrl;
   appendEvent(`Primary variant selected: ${preferredVariant.label}`);
+  appendEvent("Fetching stitched media playlist for timeline analysis");
 
   const mediaText = await fetchText(state.variantUrl);
   const parsed = parseMediaManifest(mediaText, state.variantUrl);
@@ -316,6 +329,7 @@ function attachPlayerEvents() {
 
 function loadPlayback(url) {
   destroyPlayer();
+  appendEvent("Attaching playback engine");
 
   if (window.Hls && window.Hls.isSupported()) {
     const hls = new window.Hls({
@@ -351,8 +365,11 @@ async function bootstrapSession() {
   elements.playbackState.textContent = "Preparing session";
   elements.currentPhase.textContent = "Building manifest view";
   const payload = await createSession();
-  await inspectSession();
   loadPlayback(new URL(payload.master_url, window.location.origin).toString());
+  inspectSession().catch((error) => {
+    appendEvent(`Manifest inspection failed: ${error.message}`);
+    elements.currentPhase.textContent = "Playback active, inspection degraded";
+  });
 }
 
 async function main() {
