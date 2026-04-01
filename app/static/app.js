@@ -38,28 +38,28 @@ function appendEvent(message) {
 
 function setSupportStatus() {
   if (window.Hls && window.Hls.isSupported()) {
-    elements.supportPill.textContent = "hls.js 로 재생";
+    elements.supportPill.textContent = "Playback via hls.js";
     return;
   }
   if (elements.player.canPlayType("application/vnd.apple.mpegurl")) {
-    elements.supportPill.textContent = "브라우저 네이티브 HLS";
+    elements.supportPill.textContent = "Native browser HLS";
     return;
   }
-  elements.supportPill.textContent = "이 브라우저는 HLS 재생 불가";
+  elements.supportPill.textContent = "HLS playback unavailable";
 }
 
 async function createSession() {
-  appendEvent("신규 SSAI 세션 요청");
+  appendEvent("Requesting new SSAI session");
   const response = await fetch("/session");
   if (!response.ok) {
-    throw new Error(`세션 생성 실패: ${response.status}`);
+    throw new Error(`Session creation failed: ${response.status}`);
   }
   const payload = await response.json();
   state.sessionId = payload.session_id;
   state.masterUrl = new URL(payload.master_url, window.location.origin).toString();
   elements.sessionId.textContent = payload.session_id;
   elements.masterUrl.textContent = state.masterUrl;
-  appendEvent(`세션 생성 완료: ${payload.session_id}`);
+  appendEvent(`Session created: ${payload.session_id}`);
   renderConfiguredBreaks(payload.breaks || []);
   return payload;
 }
@@ -175,14 +175,14 @@ function renderConfiguredBreaks(breaks) {
   elements.breaksList.innerHTML = "";
   if (!breaks.length) {
     const item = document.createElement("li");
-    item.textContent = "설정된 광고 구간 없음";
+    item.textContent = "No configured ad breaks";
     elements.breaksList.appendChild(item);
     return;
   }
 
   for (const adBreak of breaks) {
     const item = document.createElement("li");
-    item.innerHTML = `<strong>${adBreak.id}</strong><br>after segment ${adBreak.after_segments}<br>${adBreak.asset_playlist}`;
+    item.innerHTML = `<strong>${adBreak.id}</strong><br>Insert after segment ${adBreak.after_segments}<br>${adBreak.asset_playlist}`;
     elements.breaksList.appendChild(item);
   }
 }
@@ -191,7 +191,7 @@ function renderVariants(variants) {
   elements.variantsList.innerHTML = "";
   if (!variants.length) {
     const item = document.createElement("li");
-    item.textContent = "variant 없음";
+    item.textContent = "No variants detected";
     elements.variantsList.appendChild(item);
     return;
   }
@@ -210,7 +210,7 @@ function renderTimeline() {
   if (!state.segments.length) {
     const empty = document.createElement("div");
     empty.className = "break-card";
-    empty.textContent = "manifest 분석 결과가 없습니다.";
+    empty.textContent = "No manifest analysis available yet.";
     elements.adBreaks.appendChild(empty);
     return;
   }
@@ -231,8 +231,8 @@ function renderTimeline() {
     const percent = ((adBreak.timelineStart / totalDuration) * 100).toFixed(1);
     card.innerHTML = `
       <strong>${adBreak.id}</strong>
-      <p>${adBreak.segmentCount}개 광고 세그먼트, ${adBreak.actualDuration.toFixed(1)}초</p>
-      <p>Playback ${adBreak.timelineStart.toFixed(1)}s 지점에서 시작 (${percent}%)</p>
+      <p>${adBreak.segmentCount} ad segments, ${adBreak.actualDuration.toFixed(1)} seconds</p>
+      <p>Starts at playback ${adBreak.timelineStart.toFixed(1)}s (${percent}%)</p>
     `;
     elements.adBreaks.appendChild(card);
   }
@@ -254,9 +254,9 @@ function updateActiveSegment(currentTime) {
   }
 
   const segment = state.segments[nextIndex];
-  elements.currentPhase.textContent = segment.kind === "ad" ? `광고 재생 중 (${segment.breakId})` : "콘텐츠 재생 중";
+  elements.currentPhase.textContent = segment.kind === "ad" ? `Playing ad break ${segment.breakId}` : "Playing primary content";
   elements.currentSegment.textContent = `${segment.kind} / ${segment.duration.toFixed(1)}s / #${segment.index}`;
-  appendEvent(`${segment.kind === "ad" ? "AD" : "CONTENT"} segment 진입: #${segment.index}`);
+  appendEvent(`${segment.kind === "ad" ? "AD" : "CONTENT"} segment entered: #${segment.index}`);
 }
 
 async function inspectSession() {
@@ -264,26 +264,26 @@ async function inspectSession() {
     return;
   }
 
-  appendEvent("master manifest 분석 시작");
+  appendEvent("Starting master manifest inspection");
   const masterText = await fetchText(state.masterUrl);
   state.variants = parseMasterManifest(masterText, state.masterUrl);
   renderVariants(state.variants);
 
   const preferredVariant = state.variants[0];
   if (!preferredVariant) {
-    throw new Error("사용 가능한 variant가 없습니다.");
+    throw new Error("No playable variant found.");
   }
 
   state.variantUrl = preferredVariant.url;
   elements.variantUrl.textContent = state.variantUrl;
-  appendEvent(`대표 variant 선택: ${preferredVariant.label}`);
+  appendEvent(`Primary variant selected: ${preferredVariant.label}`);
 
   const mediaText = await fetchText(state.variantUrl);
   const parsed = parseMediaManifest(mediaText, state.variantUrl);
   state.segments = parsed.segments;
   state.adBreaks = parsed.adBreaks;
   renderTimeline();
-  appendEvent(`media manifest 분석 완료: ${state.segments.length} segments / ${state.adBreaks.length} ad breaks`);
+  appendEvent(`Media manifest parsed: ${state.segments.length} segments / ${state.adBreaks.length} ad breaks`);
 }
 
 function destroyPlayer() {
@@ -297,20 +297,20 @@ function destroyPlayer() {
 
 function attachPlayerEvents() {
   elements.player.addEventListener("play", () => {
-    elements.playbackState.textContent = "재생 중";
+    elements.playbackState.textContent = "Playing";
   });
   elements.player.addEventListener("pause", () => {
-    elements.playbackState.textContent = "일시정지";
+    elements.playbackState.textContent = "Paused";
   });
   elements.player.addEventListener("waiting", () => {
-    elements.playbackState.textContent = "버퍼링";
+    elements.playbackState.textContent = "Buffering";
   });
   elements.player.addEventListener("timeupdate", () => {
     updateActiveSegment(elements.player.currentTime);
   });
   elements.player.addEventListener("error", () => {
-    elements.playbackState.textContent = "재생 오류";
-    appendEvent("비디오 엘리먼트 오류 발생");
+    elements.playbackState.textContent = "Playback error";
+    appendEvent("HTML5 video element raised an error");
   });
 }
 
@@ -326,7 +326,7 @@ function loadPlayback(url) {
     hls.attachMedia(elements.player);
     hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
       appendEvent("hls.js manifest parsed");
-      elements.playbackState.textContent = "준비 완료";
+      elements.playbackState.textContent = "Ready";
     });
     hls.on(window.Hls.Events.LEVEL_SWITCHED, (_, data) => {
       appendEvent(`ABR level switched: ${data.level}`);
@@ -340,16 +340,16 @@ function loadPlayback(url) {
 
   if (elements.player.canPlayType("application/vnd.apple.mpegurl")) {
     elements.player.src = url;
-    elements.playbackState.textContent = "준비 완료";
+    elements.playbackState.textContent = "Ready";
     return;
   }
 
-  throw new Error("이 브라우저는 HLS playback을 지원하지 않습니다.");
+  throw new Error("This browser does not support HLS playback.");
 }
 
 async function bootstrapSession() {
-  elements.playbackState.textContent = "세션 준비 중";
-  elements.currentPhase.textContent = "manifest 생성 중";
+  elements.playbackState.textContent = "Preparing session";
+  elements.currentPhase.textContent = "Building manifest view";
   const payload = await createSession();
   await inspectSession();
   loadPlayback(new URL(payload.master_url, window.location.origin).toString());
@@ -364,7 +364,7 @@ async function main() {
       await bootstrapSession();
     } catch (error) {
       appendEvent(error.message);
-      elements.playbackState.textContent = "실패";
+      elements.playbackState.textContent = "Failed";
     }
   });
 
@@ -380,7 +380,7 @@ async function main() {
     await bootstrapSession();
   } catch (error) {
     appendEvent(error.message);
-    elements.playbackState.textContent = "초기화 실패";
+    elements.playbackState.textContent = "Initialization failed";
   }
 }
 

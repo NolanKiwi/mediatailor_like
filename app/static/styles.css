@@ -1,16 +1,16 @@
 :root {
-  --bg: #07111f;
-  --panel: rgba(8, 23, 42, 0.72);
-  --panel-strong: rgba(8, 23, 42, 0.94);
-  --line: rgba(161, 211, 255, 0.16);
-  --text: #f4f7fb;
-  --muted: #9eb4c7;
-  --accent: #4dd0ff;
-  --accent-2: #7cffb8;
-  --ad: #ff8b4d;
-  --content: #4b7dff;
+  --bg: #06080c;
+  --panel: rgba(11, 16, 21, 0.82);
+  --panel-strong: rgba(8, 12, 17, 0.96);
+  --line: rgba(111, 255, 200, 0.16);
+  --text: #edf7f1;
+  --muted: #8fa89b;
+  --accent: #63ffc9;
+  --accent-2: #9aff6b;
+  --ad: #ff9d57;
+  --content: #3eb4ff;
   --danger: #ff5d7a;
-  --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
 }
 
 * {
@@ -23,9 +23,9 @@ body {
   font-family: "Space Grotesk", sans-serif;
   color: var(--text);
   background:
-    radial-gradient(circle at top left, rgba(77, 208, 255, 0.22), transparent 28%),
-    radial-gradient(circle at top right, rgba(124, 255, 184, 0.18), transparent 24%),
-    linear-gradient(135deg, #02060d 0%, #07111f 38%, #0e1f38 100%);
+    radial-gradient(circle at top left, rgba(99, 255, 201, 0.14), transparent 26%),
+    radial-gradient(circle at top right, rgba(62, 180, 255, 0.1), transparent 22%),
+    linear-gradient(180deg, #030405 0%, #06080c 40%, #0b1117 100%);
 }
 
 body::before {
@@ -66,6 +66,18 @@ body::before {
   background: var(--panel);
   backdrop-filter: blur(18px);
   box-shadow: var(--shadow);
+  position: relative;
+}
+
+.hero-copy::after,
+.hero-panel::after,
+.glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .hero-copy {
@@ -148,6 +160,18 @@ button:hover {
   border-radius: 20px;
   background: var(--panel-strong);
   border: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--accent), transparent);
 }
 
 .metric-card strong {
@@ -185,9 +209,10 @@ button:hover {
 .status-pill {
   padding: 9px 12px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--muted);
+  background: rgba(99, 255, 201, 0.08);
+  color: var(--accent);
   font-size: 0.88rem;
+  border: 1px solid rgba(99, 255, 201, 0.18);
 }
 
 .video-frame {
@@ -195,8 +220,8 @@ button:hover {
   overflow: hidden;
   border-radius: 22px;
   background:
-    radial-gradient(circle at top, rgba(77, 208, 255, 0.18), transparent 38%),
-    #03060d;
+    radial-gradient(circle at top, rgba(99, 255, 201, 0.12), transparent 38%),
+    #020304;
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -227,7 +252,7 @@ video {
 code {
   font-family: "IBM Plex Mono", monospace;
   font-size: 0.86rem;
-  color: #d8f3ff;
+  color: #b6ffe3;
   word-break: break-all;
 }
 
@@ -245,7 +270,7 @@ code {
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .timeline-segment::before {
@@ -265,7 +290,7 @@ code {
 
 .timeline-segment.active {
   transform: translateY(-6px);
-  box-shadow: 0 0 0 2px rgba(244, 247, 251, 0.8);
+  box-shadow: 0 0 0 2px rgba(237, 247, 241, 0.85), 0 0 18px rgba(99, 255, 201, 0.22);
 }
 
 .timeline-segment span {
@@ -321,8 +346,8 @@ code {
 .info-grid article {
   padding: 16px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(99, 255, 201, 0.08);
 }
 
 .break-card strong {
@@ -350,9 +375,10 @@ code {
 .stack-list li {
   padding: 12px 14px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.025);
   color: var(--muted);
   line-height: 1.5;
+  border: 1px solid rgba(99, 255, 201, 0.05);
 }
 
 .stack-list strong {
@@ -367,6 +393,7 @@ code {
 .event-log li {
   font-family: "IBM Plex Mono", monospace;
   font-size: 0.8rem;
+  color: #a5f6d3;
 }
 
 @media (max-width: 1080px) {

@@ -72,7 +72,7 @@ def test_demo_page_served():
     response = asyncio.run(demo_page())
 
     assert response.status_code == 200
-    assert "MediaTailor SSAI Demo Player" in response.body.decode("utf-8")
+    assert "SSAI Debug Console" in response.body.decode("utf-8")
 
 
 def test_session_response_contains_master_url():
